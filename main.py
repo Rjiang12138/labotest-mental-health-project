@@ -413,7 +413,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--datasetname', type=str, default="filtered_balanced_data_stu_fak22.xlsx", metavar='dataname',
+    parser.add_argument('--datasetname', type=str, default="data_stu.xlsx", metavar='dataname',
                         help='dataset name')
     parser.add_argument('--modelname', type=str, default="EBGCN", metavar='modeltype',
                         help='model type, option: BiGCN/EBGCN')
