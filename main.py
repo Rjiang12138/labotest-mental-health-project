@@ -58,7 +58,7 @@ def train_model(x_test, x_train, args, iter):
     tattention_masks_tensor = torch.LongTensor(tattention_masks).to(args.device)  # 转成张量
     ttoken_type_ids_tensor = torch.LongTensor(ttoken_type_ids).to(args.device)
     best_acc = 0
-    student_quality = {}
+    # student quality tracking removed for production environment
     for epoch in range(args.n_epochs):
 
 
@@ -211,27 +211,7 @@ def train_model(x_test, x_train, args, iter):
             #    weights.data = F.softmax(weights.data/0.5, dim=0)
             print(weights)
 
-            batch_ids = list(train_list_tweet_source.keys())[index:index + args.batchsize]
-            for i, student_id in enumerate(batch_ids):
-                # 计算该学生的confidence score
-                probs = F.softmax(weighted_output[i], dim=0)
-                confidence = probs.max().item()
-
-                # 更新学生质量信息
-                if student_id not in student_quality:
-                    student_quality[student_id] = {
-                        'loss': loss2.item(),
-                        'confidence': confidence,
-                        'acc': pred[i].eq(batch_y_tensor[i]).item()
-                    }
-                else:
-                    # 如果已存在，更新为更好的指标
-                    if loss2.item() < student_quality[student_id]['loss']:
-                        student_quality[student_id].update({
-                            'loss': loss2.item(),
-                            'confidence': confidence,
-                            'acc': pred[i].eq(batch_y_tensor[i]).item()
-                        })
+            # student-level quality tracking removed in production; no per-student bookkeeping here
 
             batch_idx = batch_idx + 1
             index = index + args.batchsize
@@ -411,31 +391,7 @@ def train_model(x_test, x_train, args, iter):
             F4 = early_stopping.F4
             break
 
-    quality_threshold = {
-        'loss': 2,  # loss阈值
-        'confidence': 0.25,  # confidence阈值
-        'acc': 1  # accuracy阈值
-    }
-
-    high_quality_students = []
-    for student_id, metrics in student_quality.items():
-        if (metrics['loss'] < quality_threshold['loss'] and
-                metrics['confidence'] > quality_threshold['confidence'] and
-                metrics['acc'] >= quality_threshold['acc']):
-            high_quality_students.append((student_id, metrics))
-
-    # 按loss排序
-    high_quality_students.sort(key=lambda x: x[1]['loss'])
-
-    # 输出高质量样本信息
-    print("\n高质量样本学生信息:")
-    print(student_quality)
-    print([student_id for student_id, _ in high_quality_students])
-    for student_id, metrics in high_quality_students:
-        print(f"学号: {student_id}")
-        print(f"Loss: {metrics['loss']:.4f}")
-        print(f"Confidence: {metrics['confidence']:.4f}")
-        print(f"Accuracy: {metrics['acc']:.4f}")
+    # student-quality summary removed for production
     return accs, F1, F2, F3, F4
 
 
